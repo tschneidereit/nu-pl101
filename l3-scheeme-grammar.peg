@@ -1,0 +1,21 @@
+start = expression+
+
+expression =
+    qexpression
+  / list
+  / atom
+
+qexpression = ws* "'" expr:expression
+    {return ['quote', expr]}
+
+list = ws* "(" ws* exprs:expression+ ws* ")" ws*
+    {return exprs;}
+
+atom = ws* chars:char+ ws*
+    { return chars.join(""); }
+
+comment = ';;' [^\n]* 
+    {return ''}
+
+char = [0-9a-zA-Z_?!+\-=@#$%^&*/.]
+ws = (comment / [ \t\r\n])+
