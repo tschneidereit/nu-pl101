@@ -1,17 +1,15 @@
 start = expression+
 
-expression =
-    qexpression
-  / list
-  / atom
+expression = ws* expr:(qexpression / list / atom) ws*
+    {return expr}
 
-qexpression = ws* "'" expr:expression
+qexpression = "'" expr:expression
     {return ['quote', expr]}
 
-list = ws* "(" ws* exprs:expression+ ws* ")" ws*
+list = "(" ws* exprs:expression+ ws* ")"
     {return exprs;}
 
-atom = ws* chars:char+ ws*
+atom = chars:char+
     { return chars.join(""); }
 
 comment = ';;' [^\n]* 
