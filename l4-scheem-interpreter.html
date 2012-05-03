@@ -43,11 +43,45 @@ var evalScheem = function (expr, env) {
                    evalScheem(expr[2], env);
         case 'quote':
             return expr[1];
+        case 'cons':
+            return [evalScheem(expr[1], env)].concat(evalScheem(expr[2], env));
     }
 };
 
 // Some unit tests
 
+suite('cons', function() {
+    test('a number and a number', function() {
+        assert.deepEqual(
+            evalScheem(['cons', ['quote', 1], ['quote', 2]], {}),
+            [1, 2]
+        );
+    });
+    test('a number and a list of numbers', function() {
+        assert.deepEqual(
+            evalScheem(['cons', ['quote', 1], ['quote', [2, 3, 4, 5]]], {}),
+            [1, 2, 3, 4, 5]
+        );
+    });
+    test('a number and an expression', function() {
+        assert.deepEqual(
+            evalScheem(['cons', ['quote', 1], ['+', 2, 3]], {}),
+            [1, 5]
+        );
+    });
+    test('two expressions', function() {
+        assert.deepEqual(
+            evalScheem(['cons', ['+', 1, 2], ['*', 2, 3]], {}),
+            [3, 6]
+        );
+    });
+    test('an expression and a list of expressions', function() {
+        assert.deepEqual(
+            evalScheem(['cons', ['+', 1, 2], ['cons', ['*', 2, 3], ['/', 6, 3]]], {}),
+            [3, 6, 2]
+        );
+    });
+});
 suite('quote', function() {
     test('a number', function() {
         assert.deepEqual(
