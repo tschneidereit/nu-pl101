@@ -35,6 +35,9 @@ var evalScheem = function (expr, env) {
         case '-':
             return evalScheem(expr[1], env) -
                    evalScheem(expr[2], env);
+        case '*':
+            return evalScheem(expr[1], env) *
+                   evalScheem(expr[2], env);
         case 'quote':
             return expr[1];
     }
@@ -99,6 +102,26 @@ suite('subtract', function() {
         assert.deepEqual(
             evalScheem(['-', 'cat', 'dog'], {dog:7, cat:35}),
             28
+        );
+    });
+});
+suite('multiply', function() {
+    test('two numbers', function() {
+        assert.deepEqual(
+            evalScheem(['*', 5, 3], {}),
+            15
+        );
+    });
+    test('a number and an expression', function() {
+        assert.deepEqual(
+            evalScheem(['*', 3, ['+', 2, 2]], {}),
+            12
+        );
+    });
+    test('a cat times a dog', function() {
+        assert.deepEqual(
+            evalScheem(['*', 'cat', 'dog'], {dog:7, cat:35}),
+            245
         );
     });
 });
