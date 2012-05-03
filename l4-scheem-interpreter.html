@@ -45,11 +45,39 @@ var evalScheem = function (expr, env) {
             return expr[1];
         case 'cons':
             return [evalScheem(expr[1], env)].concat(evalScheem(expr[2], env));
+        case 'define':
+        case 'set!':
+            env[expr[1]] = evalScheem(expr[2], env);
+            return 0;
     }
 };
 
 // Some unit tests
 
+suite('define', function() {
+    test('define a var and assign a number', function() {
+        var env = {};
+        evalScheem(['define', 'foo', 1], env);
+        assert.deepEqual(env, {'foo' : 1});
+    });
+    test('define a var and assign an expression', function() {
+        var env = {};
+        evalScheem(['define', 'foo', ['+', 1, 2]], env);
+        assert.deepEqual(env, {'foo' : 3});
+    });
+});
+suite('set!', function() {
+    test('set a var\'s value to a number', function() {
+        var env = {};
+        evalScheem(['set!', 'foo', 1], env);
+        assert.deepEqual(env, {'foo' : 1});
+    });
+    test('set a var\'s value to an expression', function() {
+        var env = {};
+        evalScheem(['set!', 'foo', ['+', 1, 2]], env);
+        assert.deepEqual(env, {'foo' : 3});
+    });
+});
 suite('cons', function() {
     test('a number and a number', function() {
         assert.deepEqual(
