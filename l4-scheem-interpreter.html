@@ -49,11 +49,25 @@ var evalScheem = function (expr, env) {
         case 'set!':
             env[expr[1]] = evalScheem(expr[2], env);
             return 0;
+        case 'begin':
+            for (var i = 1; i < expr.length - 1; i++)
+                evalScheem(expr[i], env);
+            return evalScheem(expr[expr.length - 1], env);;
     }
 };
 
 // Some unit tests
 
+suite('begin', function() {
+    test('define two vars and assign numbers then add them', function() {
+        var env = {};
+        evalScheem(['begin', ['define', 'foo', 1], ['define', 'bar', 2], ['define', 'baz', ['+', 'foo', 'bar']]], env);
+        assert.deepEqual(env, {'foo' : 1, 'bar' : 2, 'baz' : 3});
+    });
+    test('perform multiple expressions and return last one\'s value', function() {
+        assert.deepEqual(evalScheem(['begin', 1, 2, 3, ['+', 1, 2], ['+', 1, 2]], {}), 3);
+    });
+});
 suite('define', function() {
     test('define a var and assign a number', function() {
         var env = {};
