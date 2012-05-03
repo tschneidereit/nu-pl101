@@ -23,6 +23,10 @@ var evalScheem = function (expr, env) {
     if (typeof expr === 'number') {
         return expr;
     }
+    // Strings evaluate to whatever value is associated with them in env
+    if (typeof expr === 'string') {
+        return env[expr];
+    }
     // Look at head of list for operation
     switch (expr[0]) {
         case '+':
@@ -70,7 +74,7 @@ suite('add', function() {
     });
     test('a dog and a cat', function() {
         assert.deepEqual(
-            evalScheem(['+', 'dog', 'cat'], {}),
+            evalScheem(['+', 'dog', 'cat'], {dog:7, cat:35}),
             42
         );
     });
