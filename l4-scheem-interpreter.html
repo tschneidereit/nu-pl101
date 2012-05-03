@@ -32,6 +32,9 @@ var evalScheem = function (expr, env) {
         case '+':
             return evalScheem(expr[1], env) +
                    evalScheem(expr[2], env);
+        case '-':
+            return evalScheem(expr[1], env) -
+                   evalScheem(expr[2], env);
         case 'quote':
             return expr[1];
     }
@@ -76,6 +79,26 @@ suite('add', function() {
         assert.deepEqual(
             evalScheem(['+', 'dog', 'cat'], {dog:7, cat:35}),
             42
+        );
+    });
+});
+suite('subtract', function() {
+    test('two numbers', function() {
+        assert.deepEqual(
+            evalScheem(['-', 5, 3], {}),
+            2
+        );
+    });
+    test('a number and an expression', function() {
+        assert.deepEqual(
+            evalScheem(['-', 3, ['+', 2, 2]], {}),
+            -1
+        );
+    });
+    test('a cat minus a dog', function() {
+        assert.deepEqual(
+            evalScheem(['-', 'cat', 'dog'], {dog:7, cat:35}),
+            28
         );
     });
 });
