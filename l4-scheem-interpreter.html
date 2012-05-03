@@ -49,8 +49,6 @@ var evalScheem = function (expr, env) {
                    evalScheem(expr[2], env) ? '#t' : '#f';
         case 'quote':
             return expr[1];
-        case 'cons':
-            return [evalScheem(expr[1], env)].concat(evalScheem(expr[2], env));
         case 'define':
         case 'set!':
             env[expr[1]] = evalScheem(expr[2], env);
@@ -58,12 +56,24 @@ var evalScheem = function (expr, env) {
         case 'begin':
             for (var i = 1; i < expr.length - 1; i++)
                 evalScheem(expr[i], env);
-            return evalScheem(expr[expr.length - 1], env);;
+            return evalScheem(expr[expr.length - 1], env);
+        case 'cons':
+            return [evalScheem(expr[1], env)].concat(evalScheem(expr[2], env));
+        case 'car':
+            return evalScheem(expr[1], env)[0];
     }
 };
 
 // Some unit tests
 
+suite('car', function() {
+    test('get list item', function() {
+        assert.deepEqual(evalScheem(['car', ['quote', [1]]], {}), 1);
+    });
+    test('get first element of list', function() {
+        assert.deepEqual(evalScheem(['car', ['quote', [1, 2, 3]]], {}), 1);
+    });
+});
 suite('operator "<"', function() {
     test('1 < 2', function() {
         assert.deepEqual(evalScheem(['<', 1, 2], {}), '#t');
