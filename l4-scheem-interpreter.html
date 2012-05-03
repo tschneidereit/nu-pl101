@@ -61,6 +61,8 @@ var evalScheem = function (expr, env) {
             return [evalScheem(expr[1], env)].concat(evalScheem(expr[2], env));
         case 'car':
             return evalScheem(expr[1], env)[0];
+        case 'cdr':
+            return evalScheem(expr[1], env).slice(1);
     }
 };
 
@@ -72,6 +74,14 @@ suite('car', function() {
     });
     test('get first element of list', function() {
         assert.deepEqual(evalScheem(['car', ['quote', [1, 2, 3]]], {}), 1);
+    });
+});
+suite('cdr', function() {
+    test('get empty list for cdr of 1 item', function() {
+        assert.deepEqual(evalScheem(['cdr', ['quote', [1]]], {}), []);
+    });
+    test('get tail of list for cdr of list with 3 items', function() {
+        assert.deepEqual(evalScheem(['cdr', ['quote', [1, 2, 3]]], {}), [2, 3]);
     });
 });
 suite('operator "<"', function() {
