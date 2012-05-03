@@ -41,12 +41,6 @@ var evalScheem = function (expr, env) {
         case '/':
             return evalScheem(expr[1], env) /
                    evalScheem(expr[2], env);
-        case '<':
-            return evalScheem(expr[1], env) <
-                   evalScheem(expr[2], env) ? '#t' : '#f';
-        case '=':
-            return evalScheem(expr[1], env) ==
-                   evalScheem(expr[2], env) ? '#t' : '#f';
         case 'quote':
             return expr[1];
         case 'define':
@@ -57,157 +51,25 @@ var evalScheem = function (expr, env) {
             for (var i = 1; i < expr.length - 1; i++)
                 evalScheem(expr[i], env);
             return evalScheem(expr[expr.length - 1], env);
+        case '<':
+            return evalScheem(expr[1], env) <
+                   evalScheem(expr[2], env) ? '#t' : '#f';
+        case '=':
+            return evalScheem(expr[1], env) ==
+                   evalScheem(expr[2], env) ? '#t' : '#f';
+        case 'if':
+            return evalScheem(expr[evalScheem(expr[1], env) == '#t' ? 2 : 3], env);
         case 'cons':
             return [evalScheem(expr[1], env)].concat(evalScheem(expr[2], env));
         case 'car':
             return evalScheem(expr[1], env)[0];
         case 'cdr':
             return evalScheem(expr[1], env).slice(1);
-        case 'if':
-            return evalScheem(expr[evalScheem(expr[1], env) == '#t' ? 2 : 3], env);
     }
 };
 
 // Some unit tests
 
-suite('if', function() {
-    test('1 = 1', function() {
-        assert.deepEqual(evalScheem(['if', ['=', 1, 1], 1, 0], {}), 1);
-    });
-    test('1 = 2', function() {
-        assert.deepEqual(evalScheem(['if', ['=', 1, 2], 0, 1], {}), 1);
-    });
-});
-suite('car', function() {
-    test('get list item', function() {
-        assert.deepEqual(evalScheem(['car', ['quote', [1]]], {}), 1);
-    });
-    test('get first element of list', function() {
-        assert.deepEqual(evalScheem(['car', ['quote', [1, 2, 3]]], {}), 1);
-    });
-});
-suite('cdr', function() {
-    test('get empty list for cdr of 1 item', function() {
-        assert.deepEqual(evalScheem(['cdr', ['quote', [1]]], {}), []);
-    });
-    test('get tail of list for cdr of list with 3 items', function() {
-        assert.deepEqual(evalScheem(['cdr', ['quote', [1, 2, 3]]], {}), [2, 3]);
-    });
-});
-suite('operator "<"', function() {
-    test('1 < 2', function() {
-        assert.deepEqual(evalScheem(['<', 1, 2], {}), '#t');
-    });
-    test('2 < 1', function() {
-        assert.deepEqual(evalScheem(['<', 2, 1], {}), '#f');
-    });
-    test('1 < expr', function() {
-        assert.deepEqual(evalScheem(['<', 1, ['+', 2, 3]], {}), '#t');
-    });
-    test('expr < expr', function() {
-        assert.deepEqual(evalScheem(['<', ['-', 3, 2], ['+', 2, 3]], {}), '#t');
-    });
-});
-suite('operator "="', function() {
-    test('1 = 1', function() {
-        assert.deepEqual(evalScheem(['=', 1, 1], {}), '#t');
-    });
-    test('1 = 2', function() {
-        assert.deepEqual(evalScheem(['=', 1, 2], {}), '#f');
-    });
-    test('1 = expr', function() {
-        assert.deepEqual(evalScheem(['=', 1, ['-', 3, 2]], {}), '#t');
-    });
-    test('expr = expr', function() {
-        assert.deepEqual(evalScheem(['=', ['-', 3, 2], ['/', 2, 2]], {}), '#t');
-    });
-});
-suite('begin', function() {
-    test('define two vars and assign numbers then add them', function() {
-        var env = {};
-        evalScheem(['begin', ['define', 'foo', 1], ['define', 'bar', 2], ['define', 'baz', ['+', 'foo', 'bar']]], env);
-        assert.deepEqual(env, {'foo' : 1, 'bar' : 2, 'baz' : 3});
-    });
-    test('perform multiple expressions and return last one\'s value', function() {
-        assert.deepEqual(evalScheem(['begin', 1, 2, 3, ['+', 1, 2], ['+', 1, 2]], {}), 3);
-    });
-});
-suite('define', function() {
-    test('define a var and assign a number', function() {
-        var env = {};
-        evalScheem(['define', 'foo', 1], env);
-        assert.deepEqual(env, {'foo' : 1});
-    });
-    test('define a var and assign an expression', function() {
-        var env = {};
-        evalScheem(['define', 'foo', ['+', 1, 2]], env);
-        assert.deepEqual(env, {'foo' : 3});
-    });
-});
-suite('set!', function() {
-    test('set a var\'s value to a number', function() {
-        var env = {};
-        evalScheem(['set!', 'foo', 1], env);
-        assert.deepEqual(env, {'foo' : 1});
-    });
-    test('set a var\'s value to an expression', function() {
-        var env = {};
-        evalScheem(['set!', 'foo', ['+', 1, 2]], env);
-        assert.deepEqual(env, {'foo' : 3});
-    });
-});
-suite('cons', function() {
-    test('a number and a number', function() {
-        assert.deepEqual(
-            evalScheem(['cons', ['quote', 1], ['quote', 2]], {}),
-            [1, 2]
-        );
-    });
-    test('a number and a list of numbers', function() {
-        assert.deepEqual(
-            evalScheem(['cons', ['quote', 1], ['quote', [2, 3, 4, 5]]], {}),
-            [1, 2, 3, 4, 5]
-        );
-    });
-    test('a number and an expression', function() {
-        assert.deepEqual(
-            evalScheem(['cons', ['quote', 1], ['+', 2, 3]], {}),
-            [1, 5]
-        );
-    });
-    test('two expressions', function() {
-        assert.deepEqual(
-            evalScheem(['cons', ['+', 1, 2], ['*', 2, 3]], {}),
-            [3, 6]
-        );
-    });
-    test('an expression and a list of expressions', function() {
-        assert.deepEqual(
-            evalScheem(['cons', ['+', 1, 2], ['cons', ['*', 2, 3], ['/', 6, 3]]], {}),
-            [3, 6, 2]
-        );
-    });
-});
-suite('quote', function() {
-    test('a number', function() {
-        assert.deepEqual(
-            evalScheem(['quote', 3], {}),
-            3
-        );
-    });
-    test('an atom', function() {
-        assert.deepEqual(
-            evalScheem(['quote', 'dog'], {}),
-            'dog'
-        );
-    });
-    test('a list', function() {
-        assert.deepEqual(
-            evalScheem(['quote', [1, 2, 3]], {}),
-            [1, 2, 3]
-        );
-    });
-});
 suite('add', function() {
     test('two numbers', function() {
         assert.deepEqual(
@@ -286,6 +148,144 @@ suite('divide', function() {
             evalScheem(['/', 'cat', 'dog'], {dog:7, cat:35}),
             5
         );
+    });
+});
+suite('quote', function() {
+    test('a number', function() {
+        assert.deepEqual(
+            evalScheem(['quote', 3], {}),
+            3
+        );
+    });
+    test('an atom', function() {
+        assert.deepEqual(
+            evalScheem(['quote', 'dog'], {}),
+            'dog'
+        );
+    });
+    test('a list', function() {
+        assert.deepEqual(
+            evalScheem(['quote', [1, 2, 3]], {}),
+            [1, 2, 3]
+        );
+    });
+});
+suite('define', function() {
+    test('define a var and assign a number', function() {
+        var env = {};
+        evalScheem(['define', 'foo', 1], env);
+        assert.deepEqual(env, {'foo' : 1});
+    });
+    test('define a var and assign an expression', function() {
+        var env = {};
+        evalScheem(['define', 'foo', ['+', 1, 2]], env);
+        assert.deepEqual(env, {'foo' : 3});
+    });
+});
+suite('set!', function() {
+    test('set a var\'s value to a number', function() {
+        var env = {};
+        evalScheem(['set!', 'foo', 1], env);
+        assert.deepEqual(env, {'foo' : 1});
+    });
+    test('set a var\'s value to an expression', function() {
+        var env = {};
+        evalScheem(['set!', 'foo', ['+', 1, 2]], env);
+        assert.deepEqual(env, {'foo' : 3});
+    });
+});
+suite('begin', function() {
+    test('define two vars and assign numbers then add them', function() {
+        var env = {};
+        evalScheem(['begin', ['define', 'foo', 1], ['define', 'bar', 2], ['define', 'baz', ['+', 'foo', 'bar']]], env);
+        assert.deepEqual(env, {'foo' : 1, 'bar' : 2, 'baz' : 3});
+    });
+    test('perform multiple expressions and return last one\'s value', function() {
+        assert.deepEqual(evalScheem(['begin', 1, 2, 3, ['+', 1, 2], ['+', 1, 2]], {}), 3);
+    });
+});
+suite('operator "<"', function() {
+    test('1 < 2', function() {
+        assert.deepEqual(evalScheem(['<', 1, 2], {}), '#t');
+    });
+    test('2 < 1', function() {
+        assert.deepEqual(evalScheem(['<', 2, 1], {}), '#f');
+    });
+    test('1 < expr', function() {
+        assert.deepEqual(evalScheem(['<', 1, ['+', 2, 3]], {}), '#t');
+    });
+    test('expr < expr', function() {
+        assert.deepEqual(evalScheem(['<', ['-', 3, 2], ['+', 2, 3]], {}), '#t');
+    });
+});
+suite('operator "="', function() {
+    test('1 = 1', function() {
+        assert.deepEqual(evalScheem(['=', 1, 1], {}), '#t');
+    });
+    test('1 = 2', function() {
+        assert.deepEqual(evalScheem(['=', 1, 2], {}), '#f');
+    });
+    test('1 = expr', function() {
+        assert.deepEqual(evalScheem(['=', 1, ['-', 3, 2]], {}), '#t');
+    });
+    test('expr = expr', function() {
+        assert.deepEqual(evalScheem(['=', ['-', 3, 2], ['/', 2, 2]], {}), '#t');
+    });
+});
+suite('if', function() {
+    test('1 = 1', function() {
+        assert.deepEqual(evalScheem(['if', ['=', 1, 1], 1, 0], {}), 1);
+    });
+    test('1 = 2', function() {
+        assert.deepEqual(evalScheem(['if', ['=', 1, 2], 0, 1], {}), 1);
+    });
+});
+suite('cons', function() {
+    test('a number and a number', function() {
+        assert.deepEqual(
+            evalScheem(['cons', ['quote', 1], ['quote', 2]], {}),
+            [1, 2]
+        );
+    });
+    test('a number and a list of numbers', function() {
+        assert.deepEqual(
+            evalScheem(['cons', ['quote', 1], ['quote', [2, 3, 4, 5]]], {}),
+            [1, 2, 3, 4, 5]
+        );
+    });
+    test('a number and an expression', function() {
+        assert.deepEqual(
+            evalScheem(['cons', ['quote', 1], ['+', 2, 3]], {}),
+            [1, 5]
+        );
+    });
+    test('two expressions', function() {
+        assert.deepEqual(
+            evalScheem(['cons', ['+', 1, 2], ['*', 2, 3]], {}),
+            [3, 6]
+        );
+    });
+    test('an expression and a list of expressions', function() {
+        assert.deepEqual(
+            evalScheem(['cons', ['+', 1, 2], ['cons', ['*', 2, 3], ['/', 6, 3]]], {}),
+            [3, 6, 2]
+        );
+    });
+});
+suite('car', function() {
+    test('get list item', function() {
+        assert.deepEqual(evalScheem(['car', ['quote', [1]]], {}), 1);
+    });
+    test('get first element of list', function() {
+        assert.deepEqual(evalScheem(['car', ['quote', [1, 2, 3]]], {}), 1);
+    });
+});
+suite('cdr', function() {
+    test('get empty list for cdr of 1 item', function() {
+        assert.deepEqual(evalScheem(['cdr', ['quote', [1]]], {}), []);
+    });
+    test('get tail of list for cdr of list with 3 items', function() {
+        assert.deepEqual(evalScheem(['cdr', ['quote', [1, 2, 3]]], {}), [2, 3]);
     });
 });
 
