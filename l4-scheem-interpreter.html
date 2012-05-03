@@ -41,6 +41,9 @@ var evalScheem = function (expr, env) {
         case '/':
             return evalScheem(expr[1], env) /
                    evalScheem(expr[2], env);
+        case '<':
+            return evalScheem(expr[1], env) <
+                   evalScheem(expr[2], env) ? '#t' : '#f';
         case 'quote':
             return expr[1];
         case 'cons':
@@ -58,6 +61,20 @@ var evalScheem = function (expr, env) {
 
 // Some unit tests
 
+suite('operator "<"', function() {
+    test('1 < 2', function() {
+        assert.deepEqual(evalScheem(['<', 1, 2], {}), '#t');
+    });
+    test('2 < 1', function() {
+        assert.deepEqual(evalScheem(['<', 2, 1], {}), '#f');
+    });
+    test('1 < expr', function() {
+        assert.deepEqual(evalScheem(['<', 1, ['+', 2, 3]], {}), '#t');
+    });
+    test('expr < expr', function() {
+        assert.deepEqual(evalScheem(['<', ['-', 3, 2], ['+', 2, 3]], {}), '#t');
+    });
+});
 suite('begin', function() {
     test('define two vars and assign numbers then add them', function() {
         var env = {};
