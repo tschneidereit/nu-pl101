@@ -44,6 +44,9 @@ var evalScheem = function (expr, env) {
         case '<':
             return evalScheem(expr[1], env) <
                    evalScheem(expr[2], env) ? '#t' : '#f';
+        case '=':
+            return evalScheem(expr[1], env) ==
+                   evalScheem(expr[2], env) ? '#t' : '#f';
         case 'quote':
             return expr[1];
         case 'cons':
@@ -73,6 +76,20 @@ suite('operator "<"', function() {
     });
     test('expr < expr', function() {
         assert.deepEqual(evalScheem(['<', ['-', 3, 2], ['+', 2, 3]], {}), '#t');
+    });
+});
+suite('operator "="', function() {
+    test('1 = 1', function() {
+        assert.deepEqual(evalScheem(['=', 1, 1], {}), '#t');
+    });
+    test('1 = 2', function() {
+        assert.deepEqual(evalScheem(['=', 1, 2], {}), '#f');
+    });
+    test('1 = expr', function() {
+        assert.deepEqual(evalScheem(['=', 1, ['-', 3, 2]], {}), '#t');
+    });
+    test('expr = expr', function() {
+        assert.deepEqual(evalScheem(['=', ['-', 3, 2], ['/', 2, 2]], {}), '#t');
     });
 });
 suite('begin', function() {
