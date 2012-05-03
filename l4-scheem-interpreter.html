@@ -63,11 +63,21 @@ var evalScheem = function (expr, env) {
             return evalScheem(expr[1], env)[0];
         case 'cdr':
             return evalScheem(expr[1], env).slice(1);
+        case 'if':
+            return evalScheem(expr[evalScheem(expr[1], env) == '#t' ? 2 : 3], env);
     }
 };
 
 // Some unit tests
 
+suite('if', function() {
+    test('1 = 1', function() {
+        assert.deepEqual(evalScheem(['if', ['=', 1, 1], 1, 0], {}), 1);
+    });
+    test('1 = 2', function() {
+        assert.deepEqual(evalScheem(['if', ['=', 1, 2], 0, 1], {}), 1);
+    });
+});
 suite('car', function() {
     test('get list item', function() {
         assert.deepEqual(evalScheem(['car', ['quote', [1]]], {}), 1);
